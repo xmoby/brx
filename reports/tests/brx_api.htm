@@ -1,0 +1,185 @@
+<html xmlnx="http://wwww.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+<script type="text/javascript" src="brx/brx.js"></script>
+
+<style>
+body {
+	font-family: Arial, Helvetica, sans-serif;
+}
+
+table {
+	border-collapse: collapse;
+}
+
+table tr:nth-child(even) {
+	background: lightgray;
+}
+
+table th {
+	color: white;
+	background: darkblue;
+	border: 1px solid black;
+}
+
+table td {
+	border: 1px solid #555;
+	padding: 4px;
+}
+
+table td:nth-child(1) {
+	font-family: 'Courier New', Courier, monospace;
+	text-align: center;
+	vertical-align: top;
+}
+
+table td.valueSingle:nth-child(2) {
+	text-align: center;
+}
+
+table td.valueObject:nth-child(2) {
+	font-family: 'Courier New', Courier, monospace;
+	font-size: smaller;
+}
+
+table td:nth-child(3) {
+	font-size: smaller;
+	vertical-align: top;
+}
+
+/* Rounded corners around tables */
+table tr:first-child th:first-child {
+	border-radius: 0.3em 0 0 0;
+}
+
+table tr:first-child th:last-child {
+	border-radius: 0 0.3em 0 0;
+}
+
+table tr:last-child td:first-child {
+	border-radius: 0 0 0 0.6em;
+}
+
+table tr:last-child td:last-child {
+	border-radius: 0 0 0.6em 0;
+}
+</style>
+
+<script type="text/javascript">
+	// Necessary boilerplate.
+	var BRXRAW = {
+		'age_name': '$age_name',
+		'asst_brewer': '$asst_brewer',
+		'boil_ingredients': (function () {/*$boil_ingredients*/}).toString().match(/[^]*\/\*([^]*)\*\/\}$/)[1],
+		'boil_time': '$boil_time',
+		'brewer': '$brewer',
+		'display_batch_size': '$display_batch_size',
+		'display_boil_size': '$display_boil_size',
+		'fermentables': (function () {/*$fermentables*/}).toString().match(/[^]*\/\*([^]*)\*\/\}$/)[1],
+		'mash_steps': (function () {/*$mash_steps*/}).toString().match(/[^]*\/\*([^]*)\*\/\}$/)[1],
+		'name': '$name',
+		'notes': (function () {/*$notes*/}).toString().match(/[^]*\/\*([^]*)\*\/\}$/)[1],
+		'price': '$price',
+		'primary_age': '$primary_age',
+		'primary_ingredients': (function () {/*$primary_ingredients*/}).toString().match(/[^]*\/\*([^]*)\*\/\}$/)[1],
+		'secondary_age': '$secondary_age',
+		'secondary_ingredients': (function () {/*$secondary_ingredients*/}).toString().match(/[^]*\/\*([^]*)\*\/\}$/)[1],
+		'tertiary_age': '$tertiary_age',
+		'version': '$version',
+		'yeasts': (function () {/*$yeasts*/}).toString().match(/[^]*\/\*([^]*)\*\/\}$/)[1],
+	};
+
+	// BRX tweaking.
+	brx.config.costOverhead = 0.15;
+</script>
+
+<script type="text/javascript">
+	function _printSingleField(fctname, value, description) {
+		document.write(
+			'<tr>' +
+				'<td>' + fctname + '</td>' +
+				'<td class="valueSingle">' + value + '</td>' +
+				'<td>' + ((typeof description !== 'undefined') ? description : '&nbsp;') + '</td>' +
+			'</tr>');
+	}
+
+	function _printObjectField(fctname, value, description) {
+		document.write(
+			'<tr>' +
+				'<td>' + fctname + '</td>' +
+				'<td class="valueObject">' + _objToJsonHtml(value) + '</td>' +
+				'<td>' + ((typeof description !== 'undefined') ? description : '&nbsp;') + '</td>' +
+			'</tr>');
+	}
+
+	function _objToJsonHtml(value) {
+		return JSON.stringify(value, null, '\t')
+			.replace(/\n/g, '<br/>')
+			.replace(/\t/g, '&nbsp;&nbsp;');
+	}
+</script>
+</head>
+<body>
+	<script type="text/javascript">
+		var test = new Date('$date');
+		document.write('$date >> ' + brx.fct.formatISODate(test));
+	</script>
+
+	<h1>API Demo</h1>
+	<h2>Recipe</h2>
+	<h3>General information</h3>
+	<table>
+		<tr><th>Function</th><th>Value</th><th>Description</th></tr>
+		<script type="text/javascript">
+			_printSingleField('brx.recipe.fullName', brx.recipe.fullName, 'Full recipe name.');
+			_printSingleField('brx.recipe.description', brx.recipe.description);
+			_printSingleField('brx.recipe.brewers', brx.recipe.brewers, 'Name of the brewer(s).');
+			_printSingleField('brx.recipe.cost', brx.recipe.cost);
+			_printSingleField('brx.recipe.costPerLiter', brx.recipe.costPerLiter.toFixed(2), 'Cost per liter, with an overvead for taxes, shipping, etc.');
+			_printSingleField('brx.recipe.costPerBottle', brx.recipe.costPerBottle.toFixed(2), 'Cost per ' + (brx.config.bottleSize * 1000) +' ml bottle, with an overvead for taxes, shipping, etc.');
+		</script>
+	</table>
+
+	<h3>Ingredients</h3>
+	<table>
+		<tr><th>Function</th><th>Value</th><th>Description</th></tr>
+		<script type="text/javascript">
+			_printObjectField('brx.recipe.fermentableIngredients', brx.recipe.fermentableIngredients);
+			_printObjectField('brx.recipe.boilIngredients', brx.recipe.boilIngredients);
+			_printObjectField('brx.recipe.groupBoilIngredients', brx.recipe.groupBoilIngredients);
+			_printSingleField('brx.recipe.nbFermCapDrops', brx.recipe.nbFermCapDrops, 'Number of FermCap drops required.');
+			_printObjectField('brx.recipe.yeasts', brx.recipe.yeasts);
+		</script>
+	</table>
+
+	<h3>Procedures</h3>
+	<table>
+		<tr><th>Function</th><th>Value</th><th>Description</th></tr>
+		<script type="text/javascript">
+			_printSingleField('brx.recipe.mashDuration', brx.recipe.mashDuration, 'Total mash duration for the recipe, in minutes.');
+			_printObjectField('brx.recipe.mashSteps', brx.recipe.mashSteps);
+			_printSingleField('brx.recipe.fermentationDuration', brx.recipe.fermentationDuration, 'Total fermentation duration, in days.');
+		</script>
+	</table>
+
+	<h2>Helpers functions</h2>
+
+	<h3>Generic helpers</h3>
+	<table>
+		<tr><th>Function</th><th>Value</th><th>Description</th></tr>
+		<script type="text/javascript">
+			_printSingleField('brx.fct.leftPad("8", 2, "0")', brx.fct.leftPad("8", 2, "0"), '');
+			_printSingleField('brx.fct.formatISODate(new Date())', brx.fct.formatISODate(new Date()), '');
+		</script>
+	</table>
+
+	<h3>Brewing helpers</h3>
+	<table>
+		<tr><th>Function</th><th>Value</th><th>Description</th></tr>
+		<script type="text/javascript">
+			_printSingleField('brx.fct.brixFromOG("1,020")', brx.fct.brixFromOG("1,020").toFixed(1), 'BRIX value for the given textual OG, for unfermented wort.');
+		</script>
+	</table>
+</body>
+</html>
