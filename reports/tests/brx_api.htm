@@ -76,7 +76,10 @@ table tr:last-child td:last-child {
 		'brewer': '$brewer',
 		'display_batch_size': '$display_batch_size',
 		'display_boil_size': '$display_boil_size',
+		'ferment_ingredients': (function () {/*$ferment_ingredients*/}).toString().match(/[^]*\/\*([^]*)\*\/\}$/)[1],
 		'fermentables': (function () {/*$fermentables*/}).toString().match(/[^]*\/\*([^]*)\*\/\}$/)[1],
+		'ibu': '$ibu',
+		'mash_ingredients': (function () {/*$mash_ingredients*/}).toString().match(/[^]*\/\*([^]*)\*\/\}$/)[1],
 		'mash_steps': (function () {/*$mash_steps*/}).toString().match(/[^]*\/\*([^]*)\*\/\}$/)[1],
 		'name': '$name',
 		'notes': (function () {/*$notes*/}).toString().match(/[^]*\/\*([^]*)\*\/\}$/)[1],
@@ -85,16 +88,18 @@ table tr:last-child td:last-child {
 		'primary_ingredients': (function () {/*$primary_ingredients*/}).toString().match(/[^]*\/\*([^]*)\*\/\}$/)[1],
 		'secondary_age': '$secondary_age',
 		'secondary_ingredients': (function () {/*$secondary_ingredients*/}).toString().match(/[^]*\/\*([^]*)\*\/\}$/)[1],
+		'steep_ingredients': (function () {/*$steep_ingredients*/}).toString().match(/[^]*\/\*([^]*)\*\/\}$/)[1],
 		'tertiary_age': '$tertiary_age',
 		'version': '$version',
-		'yeasts': (function () {/*$yeasts*/}).toString().match(/[^]*\/\*([^]*)\*\/\}$/)[1],
+		'yeasts': (function () {/*$yeasts*/}).toString().match(/[^]*\/\*([^]*)\*\/\}$/)[1]
 	};
-
-	// BRX tweaking.
-	brx.config.costOverhead = 0.15;
 </script>
 
 <script type="text/javascript">
+	// BRX tweaking.
+	brx.config.costOverhead = 0.15;
+
+	// Printing functions.
 	function _printSingleField(fctname, value, description) {
 		document.write(
 			'<tr>' +
@@ -120,12 +125,8 @@ table tr:last-child td:last-child {
 	}
 </script>
 </head>
-<body>
-	<script type="text/javascript">
-		var test = new Date('$date');
-		document.write('$date >> ' + brx.fct.formatISODate(test));
-	</script>
 
+<body>
 	<h1>API Demo</h1>
 	<h2>Recipe</h2>
 	<h3>General information</h3>
@@ -134,8 +135,8 @@ table tr:last-child td:last-child {
 		<script type="text/javascript">
 			_printSingleField('brx.recipe.fullName', brx.recipe.fullName, 'Full recipe name.');
 			_printSingleField('brx.recipe.description', brx.recipe.description);
-			_printSingleField('brx.recipe.brewers', brx.recipe.brewers, 'Name of the brewer(s).');
-			_printSingleField('brx.recipe.cost', brx.recipe.cost);
+			_printSingleField('brx.recipe.brewersStr', brx.recipe.brewersStr, 'Name of the brewer(s).');
+			_printSingleField('brx.recipe.cost', brx.recipe.cost.toFixed(2));
 			_printSingleField('brx.recipe.costPerLiter', brx.recipe.costPerLiter.toFixed(2), 'Cost per liter, with an overvead for taxes, shipping, etc.');
 			_printSingleField('brx.recipe.costPerBottle', brx.recipe.costPerBottle.toFixed(2), 'Cost per ' + (brx.config.bottleSize * 1000) +' ml bottle, with an overvead for taxes, shipping, etc.');
 		</script>
@@ -145,11 +146,15 @@ table tr:last-child td:last-child {
 	<table>
 		<tr><th>Function</th><th>Value</th><th>Description</th></tr>
 		<script type="text/javascript">
+			_printObjectField('brx.recipe.ingredients', brx.recipe.ingredients);
+			_printObjectField('brx.recipe.ingredientsPerStep', brx.recipe.ingredientsPerStep);
 			_printObjectField('brx.recipe.fermentableIngredients', brx.recipe.fermentableIngredients);
 			_printObjectField('brx.recipe.boilIngredients', brx.recipe.boilIngredients);
-			_printObjectField('brx.recipe.groupBoilIngredients', brx.recipe.groupBoilIngredients);
+			_printObjectField('brx.recipe.boilIngredientsPerDuration', brx.recipe.boilIngredientsPerDuration);
 			_printSingleField('brx.recipe.nbFermCapDrops', brx.recipe.nbFermCapDrops, 'Number of FermCap drops required.');
 			_printObjectField('brx.recipe.yeasts', brx.recipe.yeasts);
+			_printObjectField('brx.recipe.primaryIngredients', brx.recipe.primaryIngredients);
+			_printObjectField('brx.recipe.secondaryIngredients', brx.recipe.secondaryIngredients);
 		</script>
 	</table>
 
@@ -169,8 +174,8 @@ table tr:last-child td:last-child {
 	<table>
 		<tr><th>Function</th><th>Value</th><th>Description</th></tr>
 		<script type="text/javascript">
-			_printSingleField('brx.fct.leftPad("8", 2, "0")', brx.fct.leftPad("8", 2, "0"), '');
 			_printSingleField('brx.fct.formatISODate(new Date())', brx.fct.formatISODate(new Date()), '');
+			_printSingleField('brx.fct.formatISODate("2 Aug 2020")', brx.fct.formatISODate('2 Aug 2020'), '');
 		</script>
 	</table>
 
@@ -178,7 +183,8 @@ table tr:last-child td:last-child {
 	<table>
 		<tr><th>Function</th><th>Value</th><th>Description</th></tr>
 		<script type="text/javascript">
-			_printSingleField('brx.fct.brixFromOG("1,020")', brx.fct.brixFromOG("1,020").toFixed(1), 'BRIX value for the given textual OG, for unfermented wort.');
+			_printSingleField('brx.fct.brixFromOG("1,020")', brx.fct.brixFromOG('1,020').toFixed(1), 'BRIX value for the given textual OG, for unfermented wort.');
+			_printSingleField('brx.fct.nbFermCapDrops(50)', brx.fct.nbFermCapDrops(50));
 		</script>
 	</table>
 </body>
