@@ -1,4 +1,47 @@
+// Polyfills
 
+if (!String.prototype.startsWith) {
+	String.prototype.startsWith = function(searchString, position) {
+		position = position || 0;
+		return this.indexOf(searchString, position) === position;
+	};
+}
+
+if (!String.prototype.endsWith) {
+	String.prototype.endsWith = function(searchString, position) {
+		var subjectString = this.toString();
+
+		if (typeof position !== 'number' || !isFinite(position) || Math.floor(position) !== position || position > subjectString.length) {
+			position = subjectString.length;
+		}
+
+		position -= searchString.length;
+		var lastIndex = subjectString.lastIndexOf(searchString, position);
+		return lastIndex !== -1 && lastIndex === position;
+	};
+}
+
+if (!String.prototype.padStart) {
+	String.prototype.padStart = function padStart(targetLength,padString) {
+		targetLength = targetLength>>0; //truncate if number or convert non-number to 0;
+		padString = String((typeof padString !== 'undefined' ? padString : ' '));
+
+		if (this.length > targetLength) {
+			return String(this);
+		}
+		else {
+			targetLength = targetLength-this.length;
+
+			if (targetLength > padString.length) {
+				padString += padString.repeat(targetLength/padString.length); //append to original to ensure we are longer than needed
+			}
+
+			return padString.slice(0,targetLength) + String(this);
+		}
+	};
+}
+
+// BRX API.
 var brx = {
 	version: '0.1-WIP',
 
