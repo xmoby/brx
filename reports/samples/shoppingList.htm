@@ -1,0 +1,108 @@
+<html xmlnx="http://wwww.w3.org/1999/xhtml">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<head>
+    <script type="text/javascript" src="brx/brx.js"></script>
+    <script type="text/javascript">
+        // Necessary boilerplate.
+        var BRXRAW = {
+            'age_name': '$age_name',
+            'asst_brewer': '$asst_brewer',
+            'boil_ingredients': (function () {/*$boil_ingredients*/}).toString().match(/[^]*\/\*([^]*)\*\/\}$/)[1],
+            'boil_time': '$boil_time',
+            'brewer': '$brewer',
+            'display_batch_size': '$display_batch_size',
+            'display_boil_size': '$display_boil_size',
+            'ferment_ingredients': (function () {/*$ferment_ingredients*/}).toString().match(/[^]*\/\*([^]*)\*\/\}$/)[1],
+            'fermentables': (function () {/*$fermentables*/}).toString().match(/[^]*\/\*([^]*)\*\/\}$/)[1],
+            'ibu': '$ibu',
+            'mash_ingredients': (function () {/*$mash_ingredients*/}).toString().match(/[^]*\/\*([^]*)\*\/\}$/)[1],
+            'mash_steps': (function () {/*$mash_steps*/}).toString().match(/[^]*\/\*([^]*)\*\/\}$/)[1],
+            'name': '$name',
+            'notes': (function () {/*$notes*/}).toString().match(/[^]*\/\*([^]*)\*\/\}$/)[1],
+            'price': '$price',
+            'primary_age': '$primary_age',
+            'primary_ingredients': (function () {/*$primary_ingredients*/}).toString().match(/[^]*\/\*([^]*)\*\/\}$/)[1],
+            'secondary_age': '$secondary_age',
+            'secondary_ingredients': (function () {/*$secondary_ingredients*/}).toString().match(/[^]*\/\*([^]*)\*\/\}$/)[1],
+            'steep_ingredients': (function () {/*$steep_ingredients*/}).toString().match(/[^]*\/\*([^]*)\*\/\}$/)[1],
+            'tertiary_age': '$tertiary_age',
+            'version': '$version',
+            'yeasts': (function () {/*$yeasts*/}).toString().match(/[^]*\/\*([^]*)\*\/\}$/)[1]
+        };
+    </script>
+    <script>
+        function getDetails() {
+            // We want it delivered the day before we brew.
+            var deliveryDate = new Date(new Date('$date').valueOf() - (24 * 60 * 60 * 1000));
+            return '<p>For ' + brx.recipe.fullName + ' ($style)<br/></p>' +
+                   'To deliver by ' + deliveryDate.toDateString() + '</p>';
+        }
+
+        function getList() {
+            var list = ''
+            var ingredients = brx.recipe.ingredients;
+            var hops = [];
+            var grains = [];
+            var others = [];
+
+            // First, split in categories.
+            for (var i = 0; i < ingredients.length; ++i) {
+                if (ingredients[i].type == "Hop") {
+                    hops.push(ingredients[i]);
+                } else if (ingredients[i].type == "Grain") {
+                    grains.push(ingredients[i]);
+                } else {
+                    others.push(ingredients[i]);
+                }
+            }
+
+            // List all hops.
+            if (hops.length) {
+                list += '<h2>Hops</h2><ul>';
+
+                for (i = 0; i < hops.length; ++i) {
+                    list += '<li>' + hops[i].amount + ' - ' + hops[i].name;
+                    
+                    if (hops[i].hasOwnProperty('aa')) {
+                        list += ' (' + hops[i].aa + '%)';
+                    }
+                }
+
+                list += '</ul>';
+            }
+
+            // List all grains.
+            if (grains.length) {
+                list += '<h2>Grains</h2><ul>';
+
+                for (i = 0; i < grains.length; ++i) {
+                    list += '<li>' + grains[i].amount + ' - ' + grains[i].name;
+                }
+
+                list += '</ul>';
+            }
+
+            // List the rest.
+            if (others.length) {
+                list += '<h2>Others</h2><ul>';
+
+                for (i = 0; i < others.length; ++i) {
+                    list += '<li>' + others[i].amount + ' - ' + others[i].name;
+                }
+
+                list += '</ul>';
+            }
+
+            return list;
+        }
+    </script>
+</head>
+
+<body>
+    <h1>Shopping List</h1>
+    <script type="text/javascript">
+        document.write(getDetails());
+        document.write(getList());
+    </script>
+</body>
+</html>
