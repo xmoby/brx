@@ -489,7 +489,7 @@ var brx = {
 
 			if (found != -1) {
 				item.step = 'Secondary';
-				item.name = item.name.substr(0, found);
+				item.name = item.name.substr(0, found).trim();
 			}
 
 			// Parse amount, to provide a better context when possible.
@@ -530,7 +530,7 @@ var brx = {
 			if (found != -1) {
 				item.step = item.step || 'Boil';
 				item.duration = brx._hlp.strToFloat(BRXRAW.boil_time);
-				item.name = item.name.substr(0, found);
+				item.name = item.name.substr(0, found).trim();
 			}
 
 			if (item.type == 'Hop') {
@@ -545,7 +545,7 @@ var brx = {
 			if (found != -1) {
 				item.step = item.step || 'Boil';
 				item.duration = brx._hlp.strToFloat(item.name.substr(found + marker.length));
-				item.name = item.name.substr(0, found)
+				item.name = item.name.substr(0, found).trim()
 					.replace(/\[/g, '(')
 					.replace(' %]', '%)')
 					.replace('0%', '%');
@@ -556,6 +556,7 @@ var brx = {
 
 					if (found != -1) {
 						item.aa = brx._hlp.strToFloat(item.name.substr(found + 1));
+						item.name = item.name.substr(0, found).trim();
 					}
 				}
 			}
