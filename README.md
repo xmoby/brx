@@ -32,6 +32,7 @@ BRX was tested on my personal computer (Windows 10 64-bit, in French), using Bee
 
     ```html
     <head>
+      <meta http-equiv="X-UA-Compatible" content="IE=edge" />
       <script type="text/javascript" src="brx/brx.js"></script>
       <script type="text/javascript">
         // Necessary boilerplate.
@@ -43,7 +44,10 @@ BRX was tested on my personal computer (Windows 10 64-bit, in French), using Bee
             'brewer': '$brewer',
             'display_batch_size': '$display_batch_size',
             'display_boil_size': '$display_boil_size',
+            'ferment_ingredients': (function () {/*$ferment_ingredients*/}).toString().match(/[^]*\/\*([^]*)\*\/\}$/)[1],
             'fermentables': (function () {/*$fermentables*/}).toString().match(/[^]*\/\*([^]*)\*\/\}$/)[1],
+            'ibu': '$ibu',
+            'mash_ingredients': (function () {/*$mash_ingredients*/}).toString().match(/[^]*\/\*([^]*)\*\/\}$/)[1],
             'mash_steps': (function () {/*$mash_steps*/}).toString().match(/[^]*\/\*([^]*)\*\/\}$/)[1],
             'name': '$name',
             'notes': (function () {/*$notes*/}).toString().match(/[^]*\/\*([^]*)\*\/\}$/)[1],
@@ -52,9 +56,10 @@ BRX was tested on my personal computer (Windows 10 64-bit, in French), using Bee
             'primary_ingredients': (function () {/*$primary_ingredients*/}).toString().match(/[^]*\/\*([^]*)\*\/\}$/)[1],
             'secondary_age': '$secondary_age',
             'secondary_ingredients': (function () {/*$secondary_ingredients*/}).toString().match(/[^]*\/\*([^]*)\*\/\}$/)[1],
+            'steep_ingredients': (function () {/*$steep_ingredients*/}).toString().match(/[^]*\/\*([^]*)\*\/\}$/)[1],
             'tertiary_age': '$tertiary_age',
             'version': '$version',
-            'yeasts': (function () {/*$yeasts*/}).toString().match(/[^]*\/\*([^]*)\*\/\}$/)[1],
+            'yeasts': (function () {/*$yeasts*/}).toString().match(/[^]*\/\*([^]*)\*\/\}$/)[1]
         };
       </script>
     </head>
