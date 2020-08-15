@@ -34,8 +34,7 @@
         function getDetails() {
             // We want it delivered the day before we brew.
             var deliveryDate = new Date(new Date('$date').valueOf() - (24 * 60 * 60 * 1000));
-            return '<p>For ' + brx.recipe.fullName + ' ($style)<br/></p>' +
-                   'To deliver by ' + deliveryDate.toDateString() + '</p>';
+            return '<p>For {0} ($style)<br/>To deliver by {1}</p>'.format(brx.recipe.fullName, deliveryDate.toDateString());
         }
 
         function getList() {
@@ -61,10 +60,10 @@
                 list += '<h2>Hops</h2><ul>';
 
                 for (i = 0; i < hops.length; ++i) {
-                    list += '<li>' + hops[i].amount + ' - ' + hops[i].name;
-                    
                     if (hops[i].hasOwnProperty('aa')) {
-                        list += ' (' + hops[i].aa + '%)';
+                        list += '<li>{0} - {1} ({2}%)</li>'.format(hops[i].amount, hops[i].name, hops[i].aa);
+                    } else {
+                        list += '<li>{0} - {1}</li>'.format(hops[i].amount, hops[i].name);
                     }
                 }
 
@@ -76,7 +75,7 @@
                 list += '<h2>Grains</h2><ul>';
 
                 for (i = 0; i < grains.length; ++i) {
-                    list += '<li>' + grains[i].amount + ' - ' + grains[i].name;
+                    list += '<li>{0} - {1}</li>'.format(grains[i].amount, grains[i].name);
                 }
 
                 list += '</ul>';
@@ -87,7 +86,7 @@
                 list += '<h2>Others</h2><ul>';
 
                 for (i = 0; i < others.length; ++i) {
-                    list += '<li>' + others[i].amount + ' - ' + others[i].name;
+                    list += '<li>{0} - {1}</li>'.format(others[i].amount, others[i].name);
                 }
 
                 list += '</ul>';

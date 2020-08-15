@@ -41,6 +41,16 @@ if (!String.prototype.padStart) {
 	};
 }
 
+if (!String.prototype.format) {
+	String.prototype.format = function() {
+		var args = arguments;
+		return this.replace(/\{(\d+)\}/g, function($0, $1) {
+			return args[$1] !== void 0 ? args[$1] : $0;
+		});
+	};
+}
+
+
 // BRX API.
 var brx = {
 	version: '0.1-WIP',
@@ -64,7 +74,7 @@ var brx = {
 		 */
 		get fullName() {
 			if (BRXRAW.version != '1') {  // FIXME: Somehow always returns 1.
-				return BRXRAW.name + ', ' + BRXRAW.version;
+				return '{0}, {1}'.format(BRXRAW.name, BRXRAW.version);
 			}
 
 			return BRXRAW.name;
@@ -91,7 +101,7 @@ var brx = {
 		 */
 		get brewersStr() {
 			if (BRXRAW.asst_brewer != '') {
-				return BRXRAW.brewer + ' & ' + BRXRAW.asst_brewer;
+				return '{0} & {1}'.format(BRXRAW.brewer, BRXRAW.asst_brewer);
 			} else {
 				return BRXRAW.brewer;
 			}
@@ -310,7 +320,7 @@ var brx = {
 				date = new Date(date);
 			}
 
-			return date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0') + '-' + String(date.getDate()).padStart(2, '0');
+			return '{0}-{1}-{2}'.format(date.getFullYear(), String(date.getMonth() + 1).padStart(2, '0'), String(date.getDate()).padStart(2, '0'));
 		},
 
 
