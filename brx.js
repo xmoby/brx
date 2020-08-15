@@ -182,6 +182,13 @@ var brx = {
 		},
 
 		/**
+		 * @return {Array<Object>} The list of ingredients for the mash.
+		 */
+		get mashIngredients() {
+			return brx._hlp.parseIngredientsTable(BRXRAW.mash_ingredients, 'Mash');
+		},
+
+		/**
 		 * @return {Array<Object>} The list of ingredients to add during the boil.
 		 */
 		get boilIngredients() {
@@ -223,6 +230,13 @@ var brx = {
 		 */
 		get nbFermCapDrops() {
 			return brx.fct.nbFermCapDrops(BRXRAW.display_boil_size);
+		},
+
+		/**
+		 * @return {Array<Object>} The list of ingredients to pitch when starting fermentation.
+		 */
+		get fermentIngredients() {
+			return brx._hlp.parseIngredientsTable(BRXRAW.ferment_ingredients);
 		},
 
 		/**
@@ -275,6 +289,7 @@ var brx = {
 				items.push({
 					'name': cells[0],
 					'temperature': brx._hlp.strToFloat(cells[2]),
+					'temperatureUnit': cells[2].slice(-1),
 					'duration': parseInt(cells[3]),
 					'description': cells[1]
 				});
@@ -506,9 +521,17 @@ var brx = {
 			if (item.amount.endsWith(' kg') || item.amount.endsWith(' g')) {
 				item.weight = brx._hlp.strToFloat(item.amount);
 				item.weightUnit = brx._hlp.extractUnit(item.amount);
-			} else if (item.amount.endsWith(' Items') || item.amount.endsWith(' pkg')) {
+				item.weightStr = '{0} {1}'.format(item.weight, item.weightUnit);
+			} else {
+				item.weightStr = item.amount;  // Provide a proper fallback.
+			}
+			
+			if (item.amount.endsWith(' Items') || item.amount.endsWith(' pkg')) {
 				item.quantity = brx._hlp.strToFloat(item.amount);
 				item.quantityUnit = brx._hlp.extractUnit(item.amount);
+				item.quantityStr = '{0} {1}'.format(item.quantity, item.quantityUnit);
+			} else {
+				item.quantityStr = item.amount;  // Provide a proper fallback.
 			}
 
 			// Extract color, for fermentables.
@@ -519,6 +542,7 @@ var brx = {
 					var colorStr = item.name.substr(found + 1);
 					item.color = brx._hlp.strToFloat(colorStr);
 					item.colorUnit = brx._hlp.extractUnit(colorStr);
+					item.colorStr = '{0} {1}'.format(item.color, item.colorUnit);
 					item.name = item.name.substr(0, found).trim();
 				}
 			}
