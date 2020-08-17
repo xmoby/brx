@@ -122,6 +122,21 @@ var brx = {
 	},
 
 	/**
+	 * Constants used for calculations or parsing.
+	 */
+	constants: {
+		LITERS_PER_US_GALLON: 3.78541,
+		STEP: {
+			MASH: 'Mash',
+			STEEP: 'Steep',
+			BOIL: 'Boil',
+			FERMENTATION: 'Fermentation',
+			FERMENTATION_PRIMARY: 'Primary',
+			FERMENTATION_SECONDARY: 'Secondary'
+		}
+	},
+
+	/**
 	 * Properties of the recipe.
 	 */
 	recipe: {
@@ -139,19 +154,19 @@ var brx = {
 		},
 
 		/**
+		 * @return {string} The style, as found after '@style:' in the notes, or the BJCP style if not found.
+		 */
+		get style() {
+			var value = brx._hlp.extractLineFromNotes('@style: ');
+			return value ? value : BRXRAW.style_name;
+		},
+
+		/**
 		 * @return {string} The description, as found after '@description:' in the notes.
 		 */
 		get description() {
-			var marker= '@description: ';
-			var lines = BRXRAW.notes.split('\n');
-
-			for (var i = 0; i < lines.length; ++i) {
-				if (lines[i].startsWith(marker)) {
-					return lines[i].substr(marker.length).trim();
-				}
-			}
-
-			return '';
+			var value = brx._hlp.extractLineFromNotes('@description: ');
+			return value ? value : '';
 		},
 
 		/**
@@ -166,17 +181,24 @@ var brx = {
 		},
 
 		/**
+		 * @return {Date} The brew date, as a date object.
+		 */
+		get date() {
+			return new Date(BRXRAW.date);
+		},
+
+		/**
 		 * @return {number} The total cost of the recipe, adjusted with the configured overhead.
 		 */
 		get cost() {
-			return brx._hlp.strToFloat(BRXRAW.price) * (1 + brx.config.costOverhead);
+			return BRXRAW.price.toFloat() * (1 + brx.config.costOverhead);
 		},
 
 		/**
 		 * @return {number} The total cost of a brewed liter, adjusted with the configured overhead.
 		 */
 		get costPerLiter() {
-			return brx.recipe.cost / brx._hlp.strToFloat(BRXRAW.display_batch_size);
+			return brx.recipe.cost / BRXRAW.display_batch_size.toFloat();
 		},
 
 		/**
@@ -194,12 +216,13 @@ var brx = {
 		 */
 		get ingredients() {
 			return [].concat(
-				brx._hlp.parseIngredientsTable(BRXRAW.mash_ingredients, 'Mash'),
-				brx._hlp.parseIngredientsTable(BRXRAW.steep_ingredients, 'Steep'),
-				brx._hlp.parseIngredientsTable(BRXRAW.boil_ingredients, 'Boil'),
-				brx._hlp.parseIngredientsTable(BRXRAW.ferment_ingredients, 'Fermentation'),
-				brx._hlp.parseIngredientsTable(BRXRAW.primary_ingredients, 'Primary'),
-				brx._hlp.parseIngredientsTable(BRXRAW.secondary_ingredients, 'Secondary')
+				brx._hlp.parseIngredientsTable(BRXRAW.mash_ingredients, brx.constants.STEP.MASH),
+				brx._hlp.parseIngredientsTable(BRXRAW.steep_ingredients, brx.constants.STEP.STEEP),
+				brx._hlp.parseIngredientsTable(BRXRAW.boil_ingredients, brx.constants.STEP.BOIL),
+				brx._hlp.parseIngredientsTable(BRXRAW.ferment_ingredients, brx.constants.STEP.FERMENTATION),
+				brx._hlp.parseIngredientsTable(BRXRAW.primary_ingredients, brx.constants.STEP.FERMENTATION_PRIMARY),
+				brx._hlp.parseIngredientsTable(BRXRAW.primary_ingredients, brx.constants.STEP.FERMENTATION_SECONDARY),
+				brx._hlp.parseIngredientsTable(BRXRAW.secondary_ingredients, brx.constants.STEP.FERMENTATION_SECONDARY)
 			);
 		},
 
@@ -240,10 +263,28 @@ var brx = {
 		},
 
 		/**
-		 * @return {Array<Object>} The list of ingredients for the mash.
+		 * @return {Array<Object>} The list of ingredients for the mash, including the water.
 		 */
 		get mashIngredients() {
-			return brx._hlp.parseIngredientsTable(BRXRAW.mash_ingredients, 'Mash');
+			var ingredients = [];
+			var water = brx._hlp.extractMashWaterQuantity();
+
+			if (water) {
+				var amountStr = '{0} {1}'.format(water.amount.toLocaleString(), water.amountUnit);
+				ingredients.push({
+					name: 'Water',
+					step: brx.constants.STEP.MASH,
+					amount: water.amount,
+					amountUnit: water.amountUnit,
+					amountStr: amountStr,
+					volume: water.amount,
+					volumeUnit: water.amountUnit,
+					volumeStr: amountStr
+				});
+			}
+
+			ingredients.push.apply(ingredients, brx._hlp.parseIngredientsTable(BRXRAW.mash_ingredients, brx.constants.STEP.MASH));
+			return ingredients;
 		},
 
 		/**
@@ -308,14 +349,17 @@ var brx = {
 		 * @return {Array<Object>} The list of ingredients to add to primary fermentation.
 		 */
 		get primaryIngredients() {
-			return brx._hlp.parseIngredientsTable(BRXRAW.primary_ingredients);
+			return brx._hlp.parseIngredientsTable(BRXRAW.primary_ingredients, brx.constants.STEP.FERMENTATION_PRIMARY);
 		},
 
 		/**
 		 * @return {Array<Object>} The list of ingredients to add to secondary fermentation.
 		 */
 		get secondaryIngredients() {
-			return brx._hlp.parseIngredientsTable(BRXRAW.secondary_ingredients);
+			return [].concat(
+				brx._hlp.parseIngredientsTable(BRXRAW.primary_ingredients, brx.constants.STEP.FERMENTATION_SECONDARY),
+				brx._hlp.parseIngredientsTable(BRXRAW.secondary_ingredients, brx.constants.STEP.FERMENTATION_SECONDARY)
+			);
 		},
 
 
@@ -344,10 +388,13 @@ var brx = {
 
 			for (var i = 1; i < rows.length; ++i) {
 				var cells = rows[i];
+				var temperature = cells[2].toFloat();
+				var temperatureUnit = cells[2].slice(-1);
 				items.push({
 					'name': cells[0],
-					'temperature': brx._hlp.strToFloat(cells[2]),
-					'temperatureUnit': cells[2].slice(-1),
+					'temperature': temperature,
+					'temperatureUnit': temperatureUnit,
+					'temperatureStr': '{0}&deg;{1}'.format(temperature.toLocaleString(), temperatureUnit),
 					'duration': parseInt(cells[3]),
 					'description': cells[1]
 				});
@@ -405,7 +452,7 @@ var brx = {
 		 */
 		brixFromOG: function(og) {
 			// Ref: https://www.brewersfriend.com/brix-converter/
-			var sg = brx._hlp.strToFloat(og);
+			var sg = og.toFloat();
 			return (((182.4601 * sg - 775.6821) * sg + 1262.7794) * sg - 669.5622);
 		},
 
@@ -415,7 +462,7 @@ var brx = {
 		 */
 		nbFermCapDrops: function(liters) {
 			// Correct quantity is 1.5 drops per US gallon.
-			return Math.ceil((parseInt(liters) / 3.78541) * 1.5);
+			return Math.ceil((parseInt(liters) / brx.constants.LITERS_PER_US_GALLON) * 1.5);
 		},
 	},
 
@@ -439,15 +486,6 @@ var brx = {
 		 */
 		trimHtml: function(value) {
 			return value.replace(/<.*>/g, '');
-		},
-
-		/**
-		 * Converts a string to a floating point number.
-		 * @param {string} value Value to convert.
-		 * @return {number} The converted value.
-		 */
-		strToFloat: function(value) {
-			return parseFloat(value.replace(',', '.'));
 		},
 
 		/**
@@ -519,7 +557,7 @@ var brx = {
 		},
 
 		/**
-		 * 
+		 *
 		 * @param {string} table HTML table to parse.
 		 * @param {string} step If specified, the step in which the ingredient is used.
 		 * @return {Array<Object>} The parsed ingredients.
@@ -529,7 +567,11 @@ var brx = {
 			var rows = brx._hlp.deconstructTable(table);
 
 			for (var i = 1; i < rows.length; ++i) {
-				items.push(brx._hlp.parseIngredientRow(rows[i], step));
+				var ingredient = brx._hlp.parseIngredientRow(rows[i], step);
+
+				if (ingredient) {
+					items.push(ingredient);
+				}
 			}
 
 			return items;
@@ -554,51 +596,87 @@ var brx = {
 
 			// Extract IBUs/proportion, if any.
 			if (row[4].endsWith('%')) {
-				item.proportion = brx._hlp.strToFloat(row[4]) / 100;
+				item.proportion = row[4].toFloat() / 100;
 			} else if (row[4].endsWith(' IBUs')) {
-				item.ibu = brx._hlp.strToFloat(row[4]);
-				item.proportion = item.ibu / brx._hlp.strToFloat(BRXRAW.ibu);  // IBU-related
+				item.ibu = row[4].toFloat();
+				item.proportion = item.ibu / BRXRAW.ibu.toFloat();  // IBU-related
 			}
 
 			// Extract volume, if any.
 			if (row[5] !== '-') {
-				item.volume = brx._hlp.strToFloat(row[5]);
+				item.volume = row[5].toFloat();
 				item.volumeUnit = brx._hlp.extractUnit(row[5]);
 			}
 
-			// Adjust the step.
-			var marker = ' [Secondary]';
-			var found = item.name.lastIndexOf(marker);
+			// Adjust the step, as all fermentation (primary and secondary) if put in primary by BeerSmith.
+			if (step == brx.constants.STEP.FERMENTATION_PRIMARY || step == brx.constants.STEP.FERMENTATION_SECONDARY) {
+				var marker = ' (Primary';
+				var found = item.name.lastIndexOf(marker);
 
-			if (found != -1) {
-				item.step = 'Secondary';
-				item.name = item.name.substr(0, found).trim();
+				if (found != -1) {
+					if (step == brx.constants.STEP.FERMENTATION_SECONDARY) {
+						return undefined;  // Skip adding this.
+					}
+
+					item.step = brx.constants.STEP.FERMENTATION_PRIMARY;
+					item.name = item.name.substr(0, found).trim();
+				} else {
+					marker = ' [Secondary]';
+					found = item.name.lastIndexOf(marker);
+
+					if (found != -1) {
+						if (step == brx.constants.STEP.FERMENTATION_PRIMARY) {
+							return undefined;  // Skip adding this.
+						}
+
+						item.step = brx.constants.STEP.FERMENTATION_SECONDARY;
+						item.name = item.name.substr(0, found).trim();
+					} else {
+						marker = ' (Secondary';
+						found = item.name.lastIndexOf(marker);
+
+						if (found != -1) {
+							if (step == brx.constants.STEP.FERMENTATION_PRIMARY) {
+								return undefined;  // Skip adding this.
+							}
+
+							var duration = item.name.substr(found + marker.length);
+							item.step = brx.constants.STEP.FERMENTATION_SECONDARY;
+							item.duration = duration.toFloat();
+							item.durationUnit = brx._hlp.extractUnit(duration);
+							item.durationStr = '{0} {1}'.format(String(item.duration).toLocaleFloat(), item.durationUnit);
+							item.name = item.name.substr(0, found).trim();
+						}
+					}
+				}
 			}
 
 			// Parse amount, to provide a better context when possible.
+			item.amountStr = item.amount;
+
 			if (item.amount.endsWith(' kg') || item.amount.endsWith(' g')) {
-				item.weight = brx._hlp.strToFloat(item.amount);
+				item.weight = item.amount.toFloat();
 				item.weightUnit = brx._hlp.extractUnit(item.amount);
-				item.weightStr = '{0} {1}'.format(item.weight, item.weightUnit);
+				item.weightStr = item.amountStr = '{0} {1}'.format(item.weight.toLocaleString(), item.weightUnit);
 			} else {
 				item.weightStr = item.amount;  // Provide a proper fallback.
 			}
-			
+
 			if (item.amount.endsWith(' Items') || item.amount.endsWith(' pkg')) {
-				item.quantity = brx._hlp.strToFloat(item.amount);
+				item.quantity = item.amount.toFloat();
 				item.quantityUnit = brx._hlp.extractUnit(item.amount);
-				item.quantityStr = '{0} {1}'.format(item.quantity, item.quantityUnit);
+				item.quantityStr = item.amountStr = '{0} {1}'.format(item.quantity.toLocaleString(), item.quantityUnit);
 			} else {
 				item.quantityStr = item.amount;  // Provide a proper fallback.
 			}
 
 			// Extract color, for fermentables.
-			if (item.step == 'Mash') {
+			if (item.step == brx.constants.STEP.MASH) {
 				found = item.name.lastIndexOf('(');
 
 				if (found != -1) {
 					var colorStr = item.name.substr(found + 1);
-					item.color = brx._hlp.strToFloat(colorStr);
+					item.color = colorStr.toFloat();
 					item.colorUnit = brx._hlp.extractUnit(colorStr);
 					item.colorStr = '{0} {1}'.format(item.color, item.colorUnit);
 					item.name = item.name.substr(0, found).trim();
@@ -620,13 +698,13 @@ var brx = {
 			found = item.name.lastIndexOf(marker);
 
 			if (found != -1) {
-				item.step = item.step || 'Boil';
-				item.duration = brx._hlp.strToFloat(BRXRAW.boil_time);
+				item.step = item.step || brx.constants.STEP.BOIL;
+				item.duration = BRXRAW.boil_time.toFloat();
 				item.name = item.name.substr(0, found).trim();
 			}
 
 			if (item.type == 'Hop') {
-				item.ibu = brx._hlp.strToFloat(row[4]);
+				item.ibu = row[4].toFloat();
 				marker = ' - Boil ';
 			} else {
 				marker = ' (Boil ';
@@ -635,8 +713,8 @@ var brx = {
 			found = item.name.lastIndexOf(marker);
 
 			if (found != -1) {
-				item.step = item.step || 'Boil';
-				item.duration = brx._hlp.strToFloat(item.name.substr(found + marker.length));
+				item.step = item.step || brx.constants.STEP.BOIL;
+				item.duration = item.name.substr(found + marker.length).toFloat();
 				item.name = item.name.substr(0, found).trim()
 					.replace(/\[/g, '(')
 					.replace(' %]', '%)')
@@ -647,13 +725,53 @@ var brx = {
 					found = item.name.lastIndexOf('(');
 
 					if (found != -1) {
-						item.aa = brx._hlp.strToFloat(item.name.substr(found + 1));
+						item.aa = item.name.substr(found + 1).toFloat();
 						item.name = item.name.substr(0, found).trim();
 					}
 				}
 			}
 
 			return item;
+		},
+
+		/**
+		 * @return {<Object>} Information about the water to initially add to the mash; undefined if not found.
+		 */
+		extractMashWaterQuantity: function() {
+			var mashSteps = brx.recipe.mashSteps;
+
+			if (!mashSteps) {
+				return undefined;
+			}
+
+			var found = mashSteps[0].description.match(/[\d,]* .* of water/);
+
+			if (found == null) {
+				return undefined;
+			}
+
+			var toParse = found[0].slice(0, -' of water'.length);
+
+			return {
+				amount: toParse.toFloat(),
+				amountUnit: brx._hlp.extractUnit(toParse)
+			};
+		},
+
+		/**
+		 * @param {string} prefix The prefix to look for.
+		 * @return {string} The string following the specified prefix, as found in the notes; undefined if not found.
+		 */
+		extractLineFromNotes: function(prefix) {
+			var lines = BRXRAW.notes.split('\n');
+
+			for (var i = 0; i < lines.length; ++i) {
+				if (lines[i].startsWith(prefix)) {
+					return lines[i].substr(prefix.length).trim();
+				}
+			}
+
+			return undefined;
 		}
 	}
 };

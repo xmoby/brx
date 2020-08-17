@@ -74,6 +74,7 @@ table tr:last-child td:last-child {
 		'boil_ingredients': (function () {/*$boil_ingredients*/}).toString().match(/[^]*\/\*([^]*)\*\/\}$/)[1],
 		'boil_time': '$boil_time',
 		'brewer': '$brewer',
+		'date': '$date',
 		'display_batch_size': '$display_batch_size',
 		'display_boil_size': '$display_boil_size',
 		'ferment_ingredients': (function () {/*$ferment_ingredients*/}).toString().match(/[^]*\/\*([^]*)\*\/\}$/)[1],
@@ -89,6 +90,7 @@ table tr:last-child td:last-child {
 		'secondary_age': '$secondary_age',
 		'secondary_ingredients': (function () {/*$secondary_ingredients*/}).toString().match(/[^]*\/\*([^]*)\*\/\}$/)[1],
 		'steep_ingredients': (function () {/*$steep_ingredients*/}).toString().match(/[^]*\/\*([^]*)\*\/\}$/)[1],
+		'style_name': '$style_name',
 		'tertiary_age': '$tertiary_age',
 		'version': '$version',
 		'yeasts': (function () {/*$yeasts*/}).toString().match(/[^]*\/\*([^]*)\*\/\}$/)[1]
@@ -134,6 +136,7 @@ table tr:last-child td:last-child {
 		<tr><th>Function</th><th>Value</th><th>Description</th></tr>
 		<script type="text/javascript">
 			_printSingleField('brx.recipe.fullName', brx.recipe.fullName, 'Full recipe name.');
+			_printSingleField('brx.recipe.style', brx.recipe.style);
 			_printSingleField('brx.recipe.description', brx.recipe.description);
 			_printSingleField('brx.recipe.brewersStr', brx.recipe.brewersStr, 'Name of the brewer(s).');
 			_printSingleField('brx.recipe.cost', brx.recipe.cost.toFixed(2));
