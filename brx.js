@@ -99,6 +99,16 @@ if (!String.prototype.toFixedLocaleFloat) {
 	}
 }
 
+if (!String.prototype.toUnit) {
+	String.prototype.toUnit = function(unit, fractionDigits) {
+		if (fractionDigits !== 'undefined') {
+			return '{0}&nbsp;{1}'.format(this.toFixedLocaleFloat(fractionDigits), unit);
+		}
+
+		return '{0}&nbsp;{1}'.format(this.toLocaleFloat(), unit);
+	}
+}
+
 if (!String.prototype.format) {
 	String.prototype.format = function() {
 		var args = arguments;
@@ -325,7 +335,7 @@ var brx = {
 
 		/**
 		 * @arg {number} liters Number of liters to boil.
-		 * @return {int} Number of FermCap(R) drops required.
+		 * @return {number} Number of FermCap(R) drops required.
 		 */
 		get nbFermCapDrops() {
 			return brx.fct.nbFermCapDrops(BRXRAW.display_boil_size);
@@ -360,6 +370,39 @@ var brx = {
 				brx._hlp.parseIngredientsTable(BRXRAW.primary_ingredients, brx.constants.STEP.FERMENTATION_SECONDARY),
 				brx._hlp.parseIngredientsTable(BRXRAW.secondary_ingredients, brx.constants.STEP.FERMENTATION_SECONDARY)
 			);
+		},
+
+
+		// CARBONATION =============================================================================
+
+		carb: {
+			/**
+			* @return {number} The carbonation level aimed.
+			*/
+			get level() {
+				return BRXRAW.carbonation.toFloat();
+			},
+
+			/**
+			* @return {string} The carbonation method, and unit if applicable.
+			*/
+			get methodStr() {
+				return '{0} ({1})'.format(BRXRAW.carb_name, BRXRAW.carbonation_press);
+			},
+
+			/**
+			 * @return {Object} The carbonation temperature.
+			 */
+			get temperature() {
+				var temperature = BRXRAW.display_carb_temp.toFloat();
+				var temperatureUnit = BRXRAW.display_carb_temp.slice(-1);
+
+				return {
+					'value': temperature,
+					'unit': temperatureUnit,
+					'str': '{0}&deg;{1}'.format(temperature.toLocaleString(), temperatureUnit),
+				}
+			}
 		},
 
 
@@ -458,7 +501,7 @@ var brx = {
 
 		/**
 		 * @arg {number} liters Number of liters to boil.
-		 * @return {int} Number of FermCap(R) drops required.
+		 * @return {number} Number of FermCap(R) drops required.
 		 */
 		nbFermCapDrops: function(liters) {
 			// Correct quantity is 1.5 drops per US gallon.
@@ -652,12 +695,16 @@ var brx = {
 			}
 
 			// Parse amount, to provide a better context when possible.
-			item.amountStr = item.amount;
+			if (item.amount.split(' ').length > 1) {
+				item.amountStr = item.amount.toUnit(item.amount.split(' ')[1]);
+			} else {
+				item.amountStr = item.amount;
+			}
 
 			if (item.amount.endsWith(' kg') || item.amount.endsWith(' g')) {
 				item.weight = item.amount.toFloat();
 				item.weightUnit = brx._hlp.extractUnit(item.amount);
-				item.weightStr = item.amountStr = '{0} {1}'.format(item.weight.toLocaleString(), item.weightUnit);
+				item.weightStr = '{0} {1}'.format(item.weight.toLocaleString(), item.weightUnit);
 			} else {
 				item.weightStr = item.amount;  // Provide a proper fallback.
 			}
@@ -665,7 +712,7 @@ var brx = {
 			if (item.amount.endsWith(' Items') || item.amount.endsWith(' pkg')) {
 				item.quantity = item.amount.toFloat();
 				item.quantityUnit = brx._hlp.extractUnit(item.amount);
-				item.quantityStr = item.amountStr = '{0} {1}'.format(item.quantity.toLocaleString(), item.quantityUnit);
+				item.quantityStr = '{0} {1}'.format(item.quantity.toLocaleString(), item.quantityUnit);
 			} else {
 				item.quantityStr = item.amount;  // Provide a proper fallback.
 			}
