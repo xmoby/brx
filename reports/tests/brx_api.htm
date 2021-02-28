@@ -74,9 +74,14 @@ table tr:last-child td:last-child {
 		'boil_ingredients': (function () {/*$boil_ingredients*/}).toString().match(/[^]*\/\*([^]*)\*\/\}$/)[1],
 		'boil_time': '$boil_time',
 		'brewer': '$brewer',
+		'carb_name': '$carb_name',
+		'carbonation': '$carbonation',
+		'carbonation_press': '$carbonation_press',
+		'carbonation_type': '$carbonation_type',
 		'date': '$date',
 		'display_batch_size': '$display_batch_size',
 		'display_boil_size': '$display_boil_size',
+		'display_carb_temp': '$display_carb_temp',
 		'ferment_ingredients': (function () {/*$ferment_ingredients*/}).toString().match(/[^]*\/\*([^]*)\*\/\}$/)[1],
 		'fermentables': (function () {/*$fermentables*/}).toString().match(/[^]*\/\*([^]*)\*\/\}$/)[1],
 		'ibu': '$ibu',
@@ -160,6 +165,16 @@ table tr:last-child td:last-child {
 			_printObjectField('brx.recipe.yeasts', brx.recipe.yeasts);
 			_printObjectField('brx.recipe.primaryIngredients', brx.recipe.primaryIngredients);
 			_printObjectField('brx.recipe.secondaryIngredients', brx.recipe.secondaryIngredients);
+		</script>
+	</table>
+
+	<h3>Carbonation</h3>
+	<table>
+		<tr><th>Function</th><th>Value</th><th>Description</th></tr>
+		<script type="text/javascript">
+			_printObjectField('brx.recipe.carb.level', brx.recipe.carb.level, 'Carbonation level.');
+			_printObjectField('brx.recipe.carb.methodStr', brx.recipe.carb.methodStr, 'Carbonation method, as a string.');
+			_printObjectField('brx.recipe.carb.temperature', brx.recipe.carb.temperature, 'Carbonation temperature.');
 		</script>
 	</table>
 
